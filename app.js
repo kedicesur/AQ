@@ -25,12 +25,19 @@ var errh = e => console.log(`The error handler caught exception ${e.name} caught
     rnd  = 300,  // 10 promises with 0 ~ rnd ms resolve
     as1  = 375,  // asynchrnous instertion of a string
     ap1  = 400,  // asynchrnous instertion of a promise
-    aa1  = 500,  // asynchrnous instertion of an array of promises
+    aa1  = 500,  // asynchrnous instertion of an array of promises to flush
+    aa2  = 1000, // asynchrnous instertion of an array of promises to abort
     fls  = 650,  // flush at
-    aop  = { length     : 100
+    abrt = 1010, // abort at
+    faop = { length     : 10
            , maxDuration: 300
-           , rejectRatio: 0.005
-           };
+           , rejectRatio: 0.01
+           },
+    aaop = { length     : 10
+           , maxDuration: 1000
+           , rejectRatio: 0
+           },
+    pa;
 
 aq.clear();
 
@@ -68,7 +75,7 @@ setTimeout(function(){
 setTimeout(function(){console.log(`Size @${ap1+1}ms: ${aq.size}`);},ap1+1);
 
 setTimeout(function(){
-             makePromiseArray(aop).forEach(p => aq.enqueue(p));
+             makePromiseArray(faop).forEach(p => aq.enqueue(p));
              console.log(`Queue size ${fls-aa1}ms before flush() is ${aq.size}`);
            },aa1);
 
@@ -81,6 +88,18 @@ setTimeout(function(){
            },fls);
 
 setTimeout(function(){
+             pa = makePromiseArray(aaop);
+             pa.forEach(p => aq.enqueue(p));
+             console.log(`Queue size ${abrt-aa2}ms before abort() is ${aq.size}`);
+           },aa2);
+
+setTimeout(function(){
+             aq.abort(pa[0]);
+             aq.abort(pa[3]);
+             aq.abort(pa[6]);
+           },abrt);
+
+setTimeout(function(){
              console.log(`size @ ${aa1+250}ms is: ${aq.size}`);
              aq.enqueue("Asynchronous insertion of this second string");
            }, aa1+250);
@@ -91,5 +110,4 @@ setTimeout(function(){
            }, aa1+500);
 
 for (var i=1; i <= 2; i++) aq.enqueue("Synchronous " + i);
-
 
