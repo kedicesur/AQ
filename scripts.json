@@ -4,6 +4,10 @@
     "start": {
       "cmd": "deno run app.js",
       "desc": "run my app.js file"
+    },
+    "test": {
+      "cmd": "deno run ./test/test-async-queue.js",
+      "desc": "run the test file"
     }
   }
 }
