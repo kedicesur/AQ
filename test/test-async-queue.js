@@ -2,7 +2,9 @@ import AsyncQueue from "../lib/async-queue.js";
 
 async function getAsyncValues(aq){
   for await (let item of aq){
-    console.log(`The Promise at endpoint resolved with a value of "${item}"`);
+    console.log( `%cThe Promise at endpoint resolved with a value of "${item}"`
+               , `color: #00e8f9`
+               );
   };
 };
 
@@ -22,9 +24,12 @@ function makePromiseArray({length,maxDuration,rejectRatio}){
 };
 
 function run(ts){
+  console.log( `%cTHIS TEST SESSION INCLUDES ${ts.length.toString().padStart(2," ")} TESTS:`
+             , `background-color: white; color: black`
+             );
   ts.forEach((t,i) => setTimeout(args => ( console.log( `%cTest #${i+1} @${t.time.toString().padStart(5," ")}ms %c${t.name.padEnd(18," ")}:%c ${t.desc}`
-                                                      , `color:yellow`
-                                                      , `color:lightgreen`
+                                                      , `background-color:#eec80b;color:black`
+                                                      , `background-color:#7d2a35`
                                                       , `color:white`
                                                       )
                                          , t.func(args)
@@ -36,7 +41,9 @@ var errh  = e => console.log(`The error handler caught exception ${e.name} caugh
             , errHandle: false //errh
             , clearMode: "soft"
             },
-    tmp,
+    tmp  = void 0,
+    es   = 0,
+    ns   = 0,
     aq    = new AsyncQueue(opts),
     tests = [ { name: "Promises"
               , desc: `Enqueueing 10 promises to the queue`
@@ -57,7 +64,7 @@ var errh  = e => console.log(`The error handler caught exception ${e.name} caugh
               , time: 200
               }
             , { name: "Sync & Async"
-              , desc: "Inserting a sync value and  Promise.resolve()"
+              , desc: "Inserting a sync value and Promise.resolve()"
               , func: ({s,a}) => ( aq.enqueue(s)
                                  , aq.enqueue(a)
                                  )
@@ -96,7 +103,28 @@ var errh  = e => console.log(`The error handler caught exception ${e.name} caugh
                       }
               , time: 700
               }
+            , { name: "Testing Events"
+              , desc: `Check the count of "next" and "error" events`
+              , func: _ => ( console.log( `In total ${ns} dequeueing attemts are made including %cresolved %cand %cstaged rejections.`
+                                        , `color: #00e8f9`
+                                        , `color: white`
+                                        , `color: #de1e7e`
+                                        )
+                           , console.log( `In total ${es} items are either %caborted prematurely, %crejected at the pending state %cor %crejected at the staged state.`
+                                        , `color: darksalmon`
+                                        , `color: orangered`
+                                        , `color: white`
+                                        , `color: #de1e7e`
+                                        )
+                           )
+              , args: {}
+              , time: 900
+              }
             ];
+
+aq.on("error").add(_ => es++);
+aq.on("next").add( _ => ns++);
+aq.on("empty").add(_ => !aq.size && console.log(`%cEmpty queue fired`, "background-color:#e71837;color:white"))
 
 getAsyncValues(aq);
 run(tests);
