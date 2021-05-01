@@ -41,20 +41,21 @@ The **options** object argument (`opts` above) could take the following shape
     - `"soft"` clears all the items in the queue except for the ones in resolved state.
 
 **Methods**
+
 As of v0.1 the following methods are available
 
-- **`.enqueue(item)`:** Inserts an item to the end of the queue. and increments the `size` of the queue. The return value is the current AQ instance.
+- **`.enqueue(item)`:** Inserts an item to the end of the queue and increments the `size` of the queue. The return value is the current AQ instance.
 - **`.clear("hard" | "soft")`:** Depending on the provided argument clears the queue either completely or by keeping the items in resolved state respectively. The return value is the current AQ instance.
-- **`.flush()`:** Similar to `.clear("hard")` but the returns an array of items in resolved or pending states. This can used to prematurely clear the queue and apply the remaining items to standard `Promise` methods like `.all()`, `.race()`or `.any()` etc.
-- **`.on("event")`:** Adds or removes event listeners. AQ instances can take three event types
+- **`.flush()`:** Similar to `.clear("hard")` but the returns an array of items in resolved or pending states. This can be used to prematurely clear the queue and apply the remaining resolved or pending items to standard `Promise` methods like `.all()`, `.race()`or `.any()` etc.
+- **`.on("event")`:** Adds or removes event listeners. You can add multiple event listeners per event. AQ instances can take three event types
     - `"next"` event is fired per yielding of a pending or an already resolved item at the head of the queue. Some pending items at the head might of course get rejected and this won't prevent the `"next"` event from firing.
     - `"error"` event is fired once an item in the queue gets rejected except for the rejections those can be caught by the error handler (rejections at head). The error object is passed to the event handler.
-    - `"empty"` event is fired when the queue becomes empty.
+    - `"empty"` event is fired whenever the queue becomes empty.
 
     When invoked, the `.on("event")` returns an object with two methods. **`.add(f)`** and **`.remove(n)`** whereas `f` is a function and `n` is an integer index value.
 
-    - **`on("event").add(f)`:** Such as `var n = aq.on("error").add(e => doSomethingWith(e));`. The return value will be an integer which you may consider like the ID of the added event listener to be used to remove it at a later time.
-    - **`on("event").remove(n)`:** Such as `aq.on("empty").remove(0);`
+    - **`.on("event").add(f)`:** Such as `var n = aq.on("error").add(e => doSomethingWith(e));`. The return value will be an integer which you may consider like the ID of the added event listener to be used to remove it at a later time.
+    - **`.on("event").remove(n)`:** Such as `aq.on("empty").remove(0);`
 
 - **`.abort(item)`:** Not implemented yet. Remains as a soon to be feature.
 
@@ -63,4 +64,5 @@ As of v0.1 the following methods are available
 As of v0.1, AQ instances have only one read only property which is `.size` that gives you the number of items in the queue.
 
 **License**
-Copyright^©^ 2021, Redu. Relesed under [GNU General Public License v3.0](https://choosealicense.com/licenses/gpl-3.0/)
+
+Copyright<sup>©</sup> 2021, Redu. Relesed under [GNU General Public License v3.0](https://choosealicense.com/licenses/gpl-3.0/)
