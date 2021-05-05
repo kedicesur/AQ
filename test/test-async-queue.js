@@ -8,9 +8,9 @@ async function getAsyncValues(aq){
   };
 };
 
-function makePromiseArray({length,maxDuration,rejectRatio}){
+function makePromiseArray({length,earliest,maxDuration,rejectRatio}){
   return Array.from({length}, (_,i) => new Promise((v,x) => {
-                                                     var dur = ~~(Math.random()*maxDuration),
+                                                     var dur = Number((earliest + Math.random()*maxDuration).toFixed(2)),
                                                          act = Math.random() < rejectRatio ? { fun: x
                                                                                              , msg: { name   : "Bad Luck"
                                                                                                     , message: `Promise ${i} expected at ${dur}ms but rejected due to ${rejectRatio*100}% bad luck`
@@ -37,7 +37,7 @@ function run(ts){
 };
 
 var errh  = e => console.log(`The error handler caught exception ${e.name} caught due to "${e.message}"`),
-    opts  = { timeout  : 200
+    opts  = { timeout  : 199
             , errHandle: false //errh
             , clearMode: "soft"
             },
@@ -47,8 +47,9 @@ var errh  = e => console.log(`The error handler caught exception ${e.name} caugh
     aq    = new AsyncQueue(opts),
     tests = [ { name: "Promises"
               , desc: `Enqueueing 10 promises to the queue`
-              , func: ({length,maxDuration,rejectRatio}) => makePromiseArray({length,maxDuration,rejectRatio}).forEach(e => aq.enqueue(e))
+              , func: ({length,earliest,maxDuration,rejectRatio}) => makePromiseArray({length,earliest,maxDuration,rejectRatio}).forEach(e => aq.enqueue(e))
               , args: { length     : 10
+                      , earliest   : 0
                       , maxDuration: 300
                       , rejectRatio: 0.1
                       }
@@ -56,11 +57,11 @@ var errh  = e => console.log(`The error handler caught exception ${e.name} caugh
               }
             , { name: "Clear"
               , desc: "Clear the queue at a given time"
-              , func: ({clearMode}) => ( console.log(`Clearing ${aq.size} promises`)
+              , func: ({clearMode}) => ( console.log(`Clearing ${aq.size} promises in "${aq.clearMode}" mode`)
                                        , aq.clear(clearMode)
                                        , console.log(`Finished clearing. The queue size is now ${aq.size}`)
                                        )
-              , args: {clearMode: "hard"}
+              , args: {clearMode: opts.clearMode}
               , time: 200
               }
             , { name: "Sync & Async"
@@ -74,9 +75,10 @@ var errh  = e => console.log(`The error handler caught exception ${e.name} caugh
               , time: 301
               }
             , { name: "Inserting Promises"
-              , desc: "Enqueueing an array of promises to be flused at the next step"
-              , func: ({length,maxDuration,rejectRatio}) => makePromiseArray({length,maxDuration,rejectRatio}).forEach(e => aq.enqueue(e))
+              , desc: "Enqueueing an array of 10 promises to be flused at the next step"
+              , func: ({length,earliest,maxDuration,rejectRatio}) => makePromiseArray({length,earliest,maxDuration,rejectRatio}).forEach(e => aq.enqueue(e))
               , args: { length     : 10
+                      , earliest   : 0
                       , maxDuration: 300
                       , rejectRatio: 0.1
                       }
@@ -105,10 +107,15 @@ var errh  = e => console.log(`The error handler caught exception ${e.name} caugh
               }
             , { name: "Testing Events"
               , desc: `Check the count of "next" and "error" events`
+<<<<<<< HEAD
               , func: _ => ( console.log( `In total ${ns} dequeueing attemts are made including %cresolved %cand %cstaged rejections.`
                                         , `color: #00e8f9`
                                         , `color: white`
                                         , `color: #de1e7e`
+=======
+              , func: _ => ( console.log( `In total ${ns} dequeueing attemts are %cresolved.`
+                                        , `color: #00e8f9` 
+>>>>>>> abort
                                         )
                            , console.log( `In total ${es} items are either %caborted prematurely, %crejected at the pending state %cor %crejected at the staged state.`
                                         , `color: darksalmon`
@@ -120,12 +127,86 @@ var errh  = e => console.log(`The error handler caught exception ${e.name} caugh
               , args: {}
               , time: 900
               }
+<<<<<<< HEAD
+=======
+            , { name: "Abortion"
+              , desc: "Testing panel.abort() and panel.state functionalities"
+              , func: ({ length,earliest,maxDuration,rejectRatio}) => {
+                                                                     aq.timeout = void 0;
+                                                                     var panels = makePromiseArray({length,earliest,maxDuration,rejectRatio}).map(p => aq.enqueue(p));
+                                                                     setTimeout( ps => ps.forEach((p,i) => ( console.log( `%cPanel #${i.toString()
+                                                                                                                                       .padStart(3," ")} is in ${p.state} state @${earliest/2}ms`
+                                                                                                                        , "color:lightgreen")
+                                                                                                           , (i%2) && p.abort()
+                                                                                                           ))
+                                                                               , earliest/2
+                                                                               , panels
+                                                                               );
+                                                                     setTimeout( ps => ps.forEach((p,i) => console.log(`Panel #${i.toString()
+                                                                                                                                  .padStart(3," ")} is in ${p.state} state @${earliest}ms`))
+                                                                               , earliest
+                                                                               , panels
+                                                                               );
+                                                                     setTimeout( ps => ps.forEach((p,i) => console.log(`%cPanel #${i.toString()
+                                                                                                                                    .padStart(3," ")} is in ${p.state} state @${maxDuration/2}ms`
+                                                                                                                      , "color:lightgreen"
+                                                                                                                      ))
+                                                                               , maxDuration/2
+                                                                               , panels
+                                                                               );
+                                                                     setTimeout( ps => ps.forEach((p,i) => console.log(`Panel #${i.toString()
+                                                                                                                                  .padStart(3," ")} is in ${p.state} state @${maxDuration+50}ms`))
+                                                                               , maxDuration+50
+                                                                               , panels
+                                                                               );
+                                                                   }
+              , args: { length     : 4
+                      , earliest   : 100
+                      , maxDuration: 400
+                      , rejectRatio: 0
+                      }
+              , time: 1000
+              }
+            , { name: "Kill Queue"
+              , desc: "Testing the termination of the queue with held promises"
+              , func: ({ length,earliest,maxDuration,rejectRatio}) => {
+                                                                     aq.timeout = void 0;
+                                                                     var panels = makePromiseArray({length,earliest,maxDuration,rejectRatio}).map(p => aq.enqueue(p));
+                                                                     setTimeout( ps => ( ps.forEach((p,i) => console.log(`Panel #${i.toString()
+                                                                                                                                    .padStart(3," ")} is in ${p.state} state @${earliest}ms`))
+                                                                                       , aq.kill()
+                                                                                       )
+                                                                               , earliest+150
+                                                                               , panels
+                                                                               );
+                                                                     setTimeout( ps => ( ps.forEach((p,i) => console.log(`Panel #${i.toString()
+                                                                                                                                    .padStart(3," ")} is in ${p.state} state @${maxDuration}ms`))
+                                                                                       , aq.enqueue("something after kill")
+                                                                                       , aq.enqueue(Promise.resolve("someting async after kill"))
+                                                                                       )
+                                                                               , maxDuration
+                                                                               , panels
+                                                                               );
+                                                                   }
+              , args: { length     : 4
+                      , earliest   : 0
+                      , maxDuration: 300
+                      , rejectRatio: 0
+                      }
+              , time: 1500
+              }
+>>>>>>> abort
             ];
 
 aq.on("error").add(_ => es++);
 aq.on("next").add( _ => ns++);
 aq.on("empty").add(_ => !aq.size && console.log(`%cEmpty queue fired`, "background-color:#e71837;color:white"))
+<<<<<<< HEAD
 
 getAsyncValues(aq);
 run(tests);
+=======
+>>>>>>> abort
 
+getAsyncValues(aq);
+run(tests.slice(0,9));
