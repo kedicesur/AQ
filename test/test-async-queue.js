@@ -107,15 +107,8 @@ var errh  = e => console.log(`The error handler caught exception ${e.name} caugh
               }
             , { name: "Testing Events"
               , desc: `Check the count of "next" and "error" events`
-<<<<<<< HEAD
-              , func: _ => ( console.log( `In total ${ns} dequeueing attemts are made including %cresolved %cand %cstaged rejections.`
-                                        , `color: #00e8f9`
-                                        , `color: white`
-                                        , `color: #de1e7e`
-=======
               , func: _ => ( console.log( `In total ${ns} dequeueing attemts are %cresolved.`
-                                        , `color: #00e8f9` 
->>>>>>> abort
+                                        , `color: #00e8f9`
                                         )
                            , console.log( `In total ${es} items are either %caborted prematurely, %crejected at the pending state %cor %crejected at the staged state.`
                                         , `color: darksalmon`
@@ -127,8 +120,6 @@ var errh  = e => console.log(`The error handler caught exception ${e.name} caugh
               , args: {}
               , time: 900
               }
-<<<<<<< HEAD
-=======
             , { name: "Abortion"
               , desc: "Testing panel.abort() and panel.state functionalities"
               , func: ({ length,earliest,maxDuration,rejectRatio}) => {
@@ -195,18 +186,11 @@ var errh  = e => console.log(`The error handler caught exception ${e.name} caugh
                       }
               , time: 1500
               }
->>>>>>> abort
             ];
 
 aq.on("error").add(_ => es++);
 aq.on("next").add( _ => ns++);
 aq.on("empty").add(_ => !aq.size && console.log(`%cEmpty queue fired`, "background-color:#e71837;color:white"))
-<<<<<<< HEAD
-
-getAsyncValues(aq);
-run(tests);
-=======
->>>>>>> abort
 
 getAsyncValues(aq);
 run(tests.slice(0,9));
