@@ -158,6 +158,34 @@ var errh  = e => console.log(`The error handler caught exception ${e.name} caugh
                       }
               , time: 1000
               }
+            , { name: "Kill Queue"
+              , desc: "Testing the termination of the queue with held promises"
+              , func: ({ length,earliest,maxDuration,rejectRatio}) => {
+                                                                     aq.timeout = void 0;
+                                                                     var panels = makePromiseArray({length,earliest,maxDuration,rejectRatio}).map(p => aq.enqueue(p));
+                                                                     setTimeout( ps => ( ps.forEach((p,i) => console.log(`Panel #${i.toString()
+                                                                                                                                    .padStart(3," ")} is in ${p.state} state @${earliest}ms`))
+                                                                                       , aq.kill()
+                                                                                       )
+                                                                               , earliest+150
+                                                                               , panels
+                                                                               );
+                                                                     setTimeout( ps => ( ps.forEach((p,i) => console.log(`Panel #${i.toString()
+                                                                                                                                    .padStart(3," ")} is in ${p.state} state @${maxDuration}ms`))
+                                                                                       , aq.enqueue("something after kill")
+                                                                                       , aq.enqueue(Promise.resolve("someting async after kill"))
+                                                                                       )
+                                                                               , maxDuration
+                                                                               , panels
+                                                                               );
+                                                                   }
+              , args: { length     : 4
+                      , earliest   : 0
+                      , maxDuration: 300
+                      , rejectRatio: 0
+                      }
+              , time: 1500
+              }
             ];
 
 aq.on("error").add(_ => es++);
@@ -165,4 +193,4 @@ aq.on("next").add( _ => ns++);
 aq.on("empty").add(_ => !aq.size && console.log(`%cEmpty queue fired`, "background-color:#e71837;color:white"))
 
 getAsyncValues(aq);
-run(tests.slice(0,8));
+run(tests.slice(0,9));
