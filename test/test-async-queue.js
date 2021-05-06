@@ -37,7 +37,7 @@ function run(ts){
 };
 
 var errh  = e => console.log(`The error handler caught exception ${e.name} caught due to "${e.message}"`),
-    opts  = { timeout  : 199
+    opts  = { timeout  : 150
             , errHandle: false //errh
             , clearMode: "soft"
             },
@@ -51,7 +51,7 @@ var errh  = e => console.log(`The error handler caught exception ${e.name} caugh
               , args: { length     : 10
                       , earliest   : 0
                       , maxDuration: 300
-                      , rejectRatio: 0.1
+                      , rejectRatio: 0.5
                       }
               , time: 0
               }
