@@ -64,7 +64,7 @@ As of v0.2 the following methods are available
     When invoked, the `.on("event")` returns an object with two methods. **`.add(f)`** and **`.remove(id)`** whereas `f` is a function and `id` is a unique id string.
 
     - **`.on("event").add(f)`:** Such as `var id = aq.on("error").add(e => doSomethingWith(e));`. The return value will be a unique id string like **`"4E34SIO5X56"`** which can be used to remove a particular event listener at a later time.
-    - **`.on("event").remove(n)`:** Such as `aq.on("empty").remove(0);` The return value is `undefined`
+    - **`.on("event").remove(id)`:** Such as `aq.on("empty").remove("4E34SIO5X56");` The return value is either `true` or `false` depending on the outcome.
 
 
 **Properties**
