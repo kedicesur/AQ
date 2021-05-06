@@ -2,7 +2,7 @@
 
 **An Asynchronous Queue implementation for JS/TS (Deno)**
 
-AQ is a lightweight asynchronous queue implementation with no dependencies. As of it's current state (v0.2) it may not be safe to use in production code. Also since the code uses modern ES2019 (ES10) features like [Private Class Fields](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/Private_class_fields) and AsyncIterators, make sure that you have the right environment. AQ is tested with Deno 1.92 and should also be OK with Node v12+, Chrome 74+, Edge 79+.
+AQ is a lightweight asynchronous queue implementation with no dependencies. As of it's current state (v0.2) it may not be safe to use in production code. Also since the code uses modern ES2019 (ES10) features like [Private Class Fields](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/Private_class_fields) and Async Iterators, make sure that you have the right environment. AQ is tested with Deno 1.92 and should also be OK with Node v12+, Chrome 74+, Edge 79+.
 
 **Functionality**
 
@@ -44,9 +44,10 @@ The **options** object argument (`opts` above) could take the following shape
 
 As of v0.2 the following methods are available
 
-- **`.enqueue(item)`:** Inserts an item to the end of the queue and increments the `size` of the queue. The return value is a `panel` object. The `panel` object has two properties and a method as follows
-    - **`item`:** Property is a reference to the enqueued item itself.
-    - **`state`:** Property shows the current state of the item in the queue such as "pending", "resolved", "rejected" or "aborted". 
+- **`.enqueue(item)`:** Inserts an item to the end of the queue and increments the `size` of the queue. The return value is a `panel` object. The `panel` object has three properties and a method as follows
+    - **`item`:** A reference to the enqueued item itself.
+    - **`state`:** Shows the current state of the item in the queue such as "pending", "resolved", "rejected" or "aborted". 
+    - **`pid`:**  An ID to the item which can be accesses through the `Error` object to retry that particular async call or whatnot.
     - **`.abort()`:** Method is used to manually abort the promise prematurely whenever needed. An aborted promise will not be dequeued.
 - **`.clear("hard" | "soft")`:** Depending on the provided argument clears the queue either completely or by keeping the items in resolved state respectively. The return value is the current AQ instance.
 - **`.flush()`:** Similar to `.clear("hard")` but the returns an array of items in resolved or pending states. This can be used to prematurely clear the queue and apply the remaining resolved or pending items to standard `Promise` methods like `.all()`, `.race()`or `.any()` etc.
