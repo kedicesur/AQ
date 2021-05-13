@@ -1,12 +1,13 @@
 import AsyncQueue from "../lib/async-queue.js";
 
 async function getAsyncValues(aq){
-  for await (let item of aq){
+  for await (const item of aq){
     console.log( `%cThe Promise at endpoint resolved with a value of "${item}"`
                , `color: #00e8f9`
                );
-  };
-};
+  }
+  console.log("The stream is finalized");
+}
 
 function makePromiseArray({length,earliest,maxDuration,rejectRatio}){
   return Array.from({length}, (_,i) => new Promise((v,x) => {
@@ -21,7 +22,7 @@ function makePromiseArray({length,earliest,maxDuration,rejectRatio}){
                                                                                              };
                                                      setTimeout(act.fun,dur,act.msg);
                                                    }));
-};
+}
 
 function run(ts){
   console.log( `%cTHIS TEST SESSION INCLUDES ${ts.length.toString().padStart(2," ")} TESTS:`
@@ -34,13 +35,14 @@ function run(ts){
                                                       )
                                          , t.func(args)
                                          ), t.time, t.args));
-};
+}
 
 var errh  = e => console.log(`The error handler caught exception ${e.name} caught due to "${e.message}"`),
     opts  = { timeout  : 150
             , errHandle: false //errh
             , clearMode: "soft"
             },
+    tc   = 1,
     tmp  = void 0,
     es   = 0,
     ns   = 0,
@@ -174,8 +176,12 @@ var errh  = e => console.log(`The error handler caught exception ${e.name} caugh
                                                                                                                                     .padStart(3," ")} is in ${p.state} state @${maxDuration}ms`))
                                                                                        , aq.enqueue("something after kill")
                                                                                        , aq.enqueue(Promise.resolve("someting async after kill"))
+                                                                                       , --tc > 0 && ( aq = new AsyncQueue(opts)
+                                                                                                     , getAsyncValues(aq)
+                                                                                                     , run(tests)
+                                                                                                     )
                                                                                        )
-                                                                               , maxDuration
+                                                                               , maxDuration+300
                                                                                , panels
                                                                                );
                                                                    }
@@ -188,9 +194,11 @@ var errh  = e => console.log(`The error handler caught exception ${e.name} caugh
               }
             ];
 
-aq.on("error").add(_ => es++);
-aq.on("next").add( _ => ns++);
-aq.on("empty").add(_ => !aq.size && console.log(`%cEmpty queue fired`, "background-color:#e71837;color:white"))
+var id0 = aq.on("error").use(_ => es++);
+var id1 = aq.on("next").use( _ => ns++);
+var id2 = aq.on("empty").use(_ => !aq.size && console.log(`%cEmpty queue fired`, "background-color:#e71837;color:white"));
+console.log(id0,id1,id2);
 
 getAsyncValues(aq);
 run(tests.slice(0,9));
+

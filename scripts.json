@@ -6,7 +6,7 @@
       "desc": "run my app.js file"
     },
     "test": {
-      "cmd": "deno run ./test/test-async-queue.js",
+      "cmd": "deno run --inspect ./test/test-async-queue.js",
       "desc": "run the test file"
     }
   }

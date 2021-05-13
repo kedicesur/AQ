@@ -6,11 +6,11 @@ AQ is a lightweight asynchronous queue implementation with no dependencies. As o
 
 **Functionality**
 
-- AQ is a FIFO queue structure which can take both asynchronous and synchronous items at the same time. The `enqueue`d items, regardless being sync or async are wrapped by a promise (outer promise). A resolution of the inner promise (`enqueue`d item) triggers the *previous* outer promise in the queue to be resolved. Since the previous inner promise is doing the same thing, this chained resolution mechanism forms the basis of an uninterrupted continuum. Such as when the queue becomes empty (all inner promises are depleted) there is still one outer promise yielded at the tip of the queue, waiting for a resolution or rejection. It will remain there, keeping the queue alive, until something new gets `enqueue`d and eventually fulfills unless the queue gets `.kill()`ed at the meantime.
+- AQ is a FIFO queue structure which can take both asynchronous and synchronous items at the same time. The `enqueue`d items, regardless being sync or async are wrapped by a promise (outer promise). A resolution of the inner promise (`enqueue`d item) triggers the *previous* outer promise in the queue to be resolved. Since the previous inner promise is doing the same thing, this chained resolution mechanism forms the basis of an uninterrupted continuum. Such as when the queue becomes empty (when all inner promises are depleted) there is still one outer promise yielded at the tip of the queue, waiting for a resolution or rejection. It will remain there, keeping the queue alive, up until something new gets `enqueue`d and eventually fulfills unless the queue gets `.kill()`ed at the meantime.
 - The item at the head of the queue gets automatically dequeued once it resolves or instantly if it's already in the resolved state. All other items in the queue must wait until they become the head regardless of their state (pending or resolved). So there is no  `dequeue` method in AQ at all.
 - In basic operation the rejections are handled inside the queue silently. This also means while consuming from AQ instances you don't need to deploy a `try` & `catch` functionality. However in order to capture the rejections you can either provide a general error handler function within the `options` object or register an error listener to the `"error"` event after the instantiation to check why and which promise was rejected.
-- There are also three events such as "next", "error" and "empty", those can be listened by event listener functions. The event listener functions can be added / removed freely at any time. Every event can hold multiple event listener functions.
-- Once an AQ instance is intiated it will be available for `enqueue`ing even if time to time it becomes empty. So you may keep it alive indefinitelly or just `.kill()` it if no longer needed.
+- There are three events those can be listened by eventlistener functions such as "next", "error" and "empty". The eventlistener functions can be added / removed freely at any time. Every event can hold multiple eventlistener functions. The eventlistener functions can be anonymous functions and they can still be removed because all eventlistener functionas are assigned a unique id.
+- Once an AQ instance is initiated it will be available for `enqueue`ing even if in time it becomes empty. So you may keep it alive indefinitelly or just `.kill()` it if no longer needed.
 - Being an async iterator, AQ instances are ideally consumed by a `for await of` loop.
 
 **Instances**
@@ -51,7 +51,7 @@ As of v0.2 the following methods are available
     - **`.abort()`:** Method is used to manually abort the promise prematurely whenever needed. An aborted promise will not be dequeued.
 - **`.clear("hard" | "soft")`:** Depending on the provided argument clears the queue either completely or by keeping the items in resolved state respectively. The return value is the current AQ instance.
 - **`.flush()`:** Similar to `.clear("hard")` but the returns an array of items in resolved or pending states. This can be used to prematurely clear the queue and apply the remaining resolved or pending items to standard `Promise` methods like `.all()`, `.race()`or `.any()` etc.
-- **`.on("event")`:** Adds or removes event listeners. You can add multiple event listeners per event. AQ instances can take three event types
+- **`.on("event")`:** Adds or removes eventlisteners. You can add multiple eventlisteners per event. AQ instances can take three event types
     - `"next"` event is fired per successfull yielding of a pending or an already resolved item at the head of the queue. Some pending items at the head might of course get rejected and the `"next"` event won't fire for rejections.
     - `"error"` event is fired once an item in the queue gets rejected except for the rejections those can be caught by the error handler (rejections at head). An error object is passed to the event handler. The `error` object can take the shape as follows;
 
@@ -62,10 +62,10 @@ As of v0.2 the following methods are available
 
     - `"empty"` event is fired whenever the queue becomes empty.
 
-    When invoked, the `.on("event")` returns an object with two methods. **`.add(f)`** and **`.remove(id)`** whereas `f` is a function and `id` is a unique id string.
+    When invoked, the `.on("event")` returns an object with two methods. **`.use(f)`** and **`.forget(id)`** whereas `f` is a function and `id` is a unique id string.
 
-    - **`.on("event").add(f)`:** Such as `var id = aq.on("error").add(e => doSomethingWith(e));`. The return value will be a unique id string like **`"4E34SIO5X56"`** which can be used to remove a particular event listener at a later time.
-    - **`.on("event").remove(id)`:** Such as `aq.on("empty").remove("4E34SIO5X56");` The return value is either `true` or `false` depending on the outcome.
+    - **`.on("event").use(f)`:** Such as `var id = aq.on("error").use(e => doSomethingWith(e));`. The return value will be a Unique Id String like **`"4E34SIO5X56"`** even if your have provided an anonymous function. This Unique Id String can be saved to remove a particular eventlistener at a later time.
+    - **`.on("event").forget(id)`:** Such as `aq.on("error").forget("4E34SIO5X56");` which will remove the function with the correspoing ID string from the eventlisteners list for that particular event. The return value is either `true` or `false` depending on the outcome.
 
 
 **Properties**
