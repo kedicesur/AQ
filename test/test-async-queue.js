@@ -37,9 +37,7 @@ function run(ts){
                                          ), t.time, t.args));
 }
 
-var errh  = e => console.log(`The error handler caught exception ${e.name} caught due to "${e.message}"`),
-    opts  = { timeout  : 150
-            , errHandle: false //errh
+var opts  = { timeout  : 200
             , clearMode: "soft"
             },
     tc   = 1,
@@ -200,5 +198,4 @@ var id2 = aq.on("empty").use(_ => !aq.size && console.log(`%cEmpty queue fired`,
 console.log(id0,id1,id2);
 
 getAsyncValues(aq);
-run(tests.slice(0,9));
-
+run(tests.slice(0,7));
