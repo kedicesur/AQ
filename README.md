@@ -70,6 +70,22 @@ As of v0.2 the following methods are available
 
 As of v0.2, AQ instances have only one read only property which is `.size` that gives you the number of items in the queue.
 
+**Use Cases**
+
+AQ is a very lightweight tool but at the same time like a Swiss Army Knife, it will allow you to perform many interesting tasks easily. It doesn't offer a big API just because I want to keep it as simple as possible while being functional. This means, you may easily extend AQ's functionalities by using it's availabe methods cleverly. Having said that, there already exists many built in asynchronous capabilities in JS/TS language so you should consider using them in the first place. However only when some exceptional cases arose where the naked Promises are not sufficient then you may consider using AQ. The point being, Promise methods are invoked synchronously, while AQ can always be invoked asynchronously whenever you have something to `enqueue`.
+
+
+
+1. **Simple Task Queue**
+
+    This is the basic operation. You may promisify your async tasks like
+
+        urls.forEach(url => aq.enqueue(fetch(url)));
+
+    and just `enqueue` them to AQ to be consumed in the order they are `enqueue`d. Or perhaps with a CPU rendering job and defined a worker session like
+    
+        var p = new Worker("./permutations");
+
 **License**
 
 Copyright<sup>©</sup> 2021, Redu. Relesed under [GNU General Public License v3.0](https://choosealicense.com/licenses/gpl-3.0/)

@@ -8,6 +8,10 @@
     "test": {
       "cmd": "deno run --inspect ./test/test-async-queue.js",
       "desc": "run the test file"
+    },
+    "race": {
+      "cmd": "deno run ./test/test-AQ-race.js",
+      "desc": "run the race test"
     }
   }
 }
