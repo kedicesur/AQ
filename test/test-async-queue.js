@@ -192,9 +192,9 @@ var opts  = { timeout  : 200
               }
             ];
 
-var id0 = aq.on("error").use(_ => es++);
-var id1 = aq.on("next").use( _ => ns++);
-var id2 = aq.on("empty").use(_ => !aq.size && console.log(`%cEmpty queue fired`, "background-color:#e71837;color:white"));
+var id0 = aq.on("error").do(_ => es++);
+var id1 = aq.on("next").do( _ => ns++);
+var id2 = aq.on("empty").do(_ => !aq.size && console.log(`%cEmpty queue fired`, "background-color:#e71837;color:white"));
 console.log(id0,id1,id2);
 
 getAsyncValues(aq);

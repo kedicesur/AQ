@@ -1,90 +1,140 @@
 # AQ
 
-**An Asynchronous Queue implementation for JS/TS (Deno)**
+**An Asynchronous Queue Implementation for JS/TS (Deno)**
 
-AQ is a lightweight asynchronous queue implementation with no dependencies. As of it's current state (v0.2) it may not be safe to use in production code. At this phase of development it's not guaranteed that a new version would be backward compatible. Also since the code uses modern ES2019 (ES10) features like [Private Class Fields](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/Private_class_fields) and Async Iterators, make sure that you have the right environment. AQ is tested with Deno 1.92 and should also be OK with Node v12+, Chrome 74+, Edge 79+.
+AQ is a lightweight asynchronous queue implementation with no dependencies. You may `enqueue` synchronous or asynchronous items either synchronously or asynchronously.
+
+As of in it's current state (v0.3) it *may* not be safe to use AQ in production code. At this phase of development it's not guaranteed that a new version to be backward compatible. Also since the code uses modern ES2019 (ES10) features like [Private Class Fields](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/Private_class_fields) and Async Iterators, make sure that you have the right environment. AQ is tested with Deno 1.92+ and should also be fine with Node v12+, Chrome 74+, Edge 79+.
 
 **Functionality**
 
-- AQ is a FIFO queue structure which can take both asynchronous and synchronous items at the same time. The `enqueue`d items, regardless being sync or async are wrapped by a promise (outer promise). A resolution of the inner promise (`enqueue`d item) triggers the *previous* outer promise in the queue to be resolved. Since the previous inner promise is doing the same thing, this interlaced chaining mechanism forms the basis of an uninterrupted continuum. Such as when the queue becomes empty (when all inner promises are depleted) there is still one outer promise yielded at the tip of the queue, awaiting for a resolution or rejection. It will remain there, keeping the queue alive, up until something new gets `enqueue`d and eventually fulfills or the queue gets `.kill()`ed abrubtly.
+- AQ is a FIFO queue structure which can take both asynchronous and synchronous items at the same time. The `enqueue`d items, regardless being sync or async are wrapped by a promise (outer promise). A resolution of the inner promise (`enqueue`d item) triggers the *previous* outer promise in the queue to be resolved. Since the previous inner promise is doing the same thing, this interlaced chaining mechanism forms the basis of an uninterrupted continuum. Such as when the queue becomes empty (when all inner promises are depleted) there is still one outer promise yielded at the tip of the queue, awaiting for a resolution or rejection. AQ will remain there, keeping the queue alive up until you `.kill()` AQ abrubtly. At the meantime you may safely `enqueue` items regardless the queue had become empty or not.
 - The item at the head of the queue gets automatically dequeued once it resolves or instantly if it's already in the resolved state. All other items in the queue must wait until they become the head regardless of their state (pending or resolved). So there is no  `dequeue` method in AQ at all.
-- In basic operation the rejections are handled inside the queue silently. This also means while consuming from AQ instances you don't need to deploy a `try` & `catch` functionality. However in order to capture the rejections you can watch them by registering an error listener to the `"error"` event and see why and which promise was rejected.
-- There are three events those can be listened by eventlistener functions such as "next", "error" and "empty". The eventlistener functions can be added / removed freely at any time. Every event can hold multiple eventlistener functions. The eventlistener functions can also be anonymous and they can still be removed because all eventlistener functions are assigned with a unique id.
-- Once an AQ instance is initiated it will remain being available for `enqueue`ing even if in time it becomes empty. So you may keep it alive indefinitelly or just `.kill()` it if no longer needed.
+- AQ can also be used as a race machine. In `raceMode = true` case all pending items up to the the first resolving promise get wiped to allow the winner item to dequeue. However unlike `Promise.race()` the items `enqueue`d after the winner will remain in the queue. This particularly so since the ones coming after the winner might have been enqueued at a later time.
+- In the basic operation rejections are handled inside the queue silently. This also means while consuming from AQ instances you don't need to deploy a `try` & `catch` functionality. However in order to capture the rejections you can watch them by registering an errorlistener function to the `"error"` event to see why and which promise was rejected.
+- There are three events those can be listened by eventlistener functions such as `"next"`, `"error"` and `"empty"`. The eventlistener functions can be added / removed freely at any time. Every event can hold multiple eventlistener functions. The eventlistener functions can also be anonymous and they can still be removed because all eventlistener functions are assigned with a unique id.
+- Once an AQ instance is initiated it will remain being available for `enqueue`ing even if in time it becomes empty. So you may keep it alive indefinitelly or just `.kill()` if it's no longer needed.
 - Being an async iterator, AQ instances are ideally consumed by a `for await of` loop.
 
 **Instances**
 
 The AQ constructor takes an options argument and simply called as,
-
-    var aq = new AQ(opts);
-
+```javascript
+var aq = new AQ(opts);
+```
 and consumed like
-
-	async function getAsyncValues(aq){
-	  for await (let item of aq){
-	    console.log(`The Promise at endpoint resolved with a value of "${item}"`);
-	  };
-	};
-
+```javascript
+async function getAsyncValues(aq){
+  for await (let item of aq){
+    console.log(`The Promise at endpoint resolved with a value of "${item}"`);
+  };
+};
+```
 The **options** object argument (`opts` above) could take the following shape
-
-    var opts = { timeout  : 200
-               , clearMode: "soft"
-               };
-
+```javascript
+var opts = { timeout  : 200
+           , clearMode: "soft"
+           , raceMode : false
+           };
+```
 - **`timeout`:** Since AQ instances get `dequeue`d automatically one thing that we shall avoid is to have an indefinitelly pending promise in the queue. The `timeout` property is of `Number` type and defines a duration in ms. `timeout` should always be provided unless you are sure that all `enqueue`d items are either synchronous or promises those will certainly resolve or reject within a reasonable time.
-- **`clearMode`:** AQ instances have a `.clear(clearMode)` method used to clear the queue at any time. `clearMode` can take only two values. `"hard"` or `"soft"`.
+- **`clearMode`:** AQ instances have a `.clear(clearMode)` method used to clear the queue at any time. `clearMode` can take only two values. `<"hard"` | `"soft">`.
     - `"hard"` clears all the items in the queue regardless their state.
     - `"soft"` clears all the items in the queue except for the ones in resolved state.
+- **`raceMode`:** Boolean `<true | false>` option is used to switch the queue into the race mode. In race mode the queue is cleared only upto the the first resolving item in the queue. Once the first resolving item is dequeued the queue reaims with the most recent items and available for further `enqueue`ing operations.
 
 **Methods**
 
-As of v0.2 the following methods are available
+As of v0.3 the following methods are available
 
 - **`.enqueue(item)`:** Inserts an item to the end of the queue and increments the `size` of the queue. The return value is a `panel` object. The `panel` object has three properties and a method as follows
     - **`item`:** A reference to the enqueued item itself.
     - **`state`:** Shows the current state of the item in the queue such as "pending", "resolved", "rejected" or "aborted". 
     - **`pid`:**  An ID to the item which can be accesses through the `Error` object to retry that particular async call or whatnot.
     - **`.abort()`:** Method is used to manually abort the promise prematurely whenever needed. An aborted promise will not be dequeued.
-- **`.clear("hard" | "soft")`:** Depending on the provided argument clears the queue either completely or by keeping the items in resolved state respectively. The return value is the current AQ instance.
-- **`.flush()`:** Similar to `.clear("hard")` but the returns an array of items in resolved or pending states. This can be used to prematurely clear the queue and apply the remaining resolved or pending items to standard `Promise` methods like `.all()`, `.race()`or `.any()` etc.
+- **`.clear("hard" | "soft" | "upto", [targetId])`:** Depending on the provided argument clears the queue accordingly;
+    - **`"hard"`**: Clears the queue completelly.
+    - **`"soft"`**: Clears the queue but leaves the already resolved items
+    - **`"upto"`**: Clears the queue up to the item with `id` maching the provided optional `targetId` argument. The items coming after are kept.
+
+    The return value is the current AQ instance.
+- **`.flush()`:** Similar to `.clear("hard")` but returns an array of items those are in resolved or pending states. This can be used to prematurely clear the queue and apply the remaining resolved or pending items to standard `Promise` methods like `.all()`, `.race()`or `.any()` etc.
 - **`.on("event")`:** Adds or removes eventlisteners. You can add multiple eventlisteners per event. AQ instances can take three event types
     - `"next"` event is fired per successfull yielding of a pending or an already resolved item at the head of the queue. Some pending items at the head might of course get rejected and the `"next"` event won't fire for rejections.
     - `"error"` event is fired once an item in the queue gets rejected. An error object is passed to the event handler. The `error` object can take the shape as follows;
-
+    ```javascript
             { name   : "Timeout"                                // name of the error
             , message: "Promise timed out before fullfillment"  // descrtiption
             , pid    : "D8VJQ7ZMIDA"                            // the ID of the rejected or aborted promise
             }
-
+    ```
     - `"empty"` event is fired whenever the queue becomes empty.
 
-    When invoked, the `.on("event")` returns an object with two methods. **`.use(f)`** and **`.forget(id)`** whereas `f` is a function and `id` is a unique id string.
+    When invoked, the `.on("event")` returns an object with two methods. `.do(f)` and `.forget(id)` whereas `f` is a function and `id` is a unique id string.
 
-    - **`.on("event").use(f)`:** Such as `var id = aq.on("error").use(e => doSomethingWith(e));`. The return value will be a Unique Id String like **`"4E34SIO5X56"`** even if your have provided an anonymous function. This Unique Id String can be saved to remove a particular eventlistener at a later time.
-    - **`.on("event").forget(id)`:** Such as `aq.on("error").forget("4E34SIO5X56");` which will remove the eventlistener function with the correspoing ID string from the eventlisteners list for that particular event. The return value is either `true` or `false` depending on the outcome.
-
+    - **`.on("event").do(f)`:** Such as `var id = aq.on("error").do(e => doSomethingWith(e));`. The return value will be a Unique Id String like `"4E34SIO5X56"` even if your have provided an anonymous function. This Unique Id String can be saved to remove a particular eventlistener at a later time.
+    - **`.on("event").forget(id)`:** Such as `aq.on("error").forget("4E34SIO5X56");` which will, if exists, remove the eventlistener function with the correspoing ID string from the eventlisteners list of that particular event. The return value is either `true` or `false` depending on the outcome.
 
 **Properties**
 
-As of v0.2, AQ instances have only one read only property which is `.size` that gives you the number of items in the queue.
+As of v0.3, AQ instances have only one read only property which is `.size` that gives you the number of items in the queue.
 
 **Use Cases**
 
-AQ is a very lightweight tool but at the same time like a Swiss Army Knife, it will allow you to perform many interesting tasks easily. It doesn't offer a big API just because I want to keep it as simple as possible while being functional. This means, you may easily extend AQ's functionalities by using it's availabe methods cleverly. Having said that, there already exists many built in asynchronous capabilities in JS/TS language so you should consider using them in the first place. However only when some exceptional cases arose where the naked Promises are not sufficient then you may consider using AQ. The point being, Promise methods are invoked synchronously, while AQ can always be invoked asynchronously whenever you have something to `enqueue`.
+AQ is a very lightweight tool but at the same time like a Swiss Army Knife, it will allow you to perform many interesting tasks easily. It doesn't offer a big API just because I want to keep it as simple as possible while being functional. This means, you may easily extend AQ's functionalities by using it's availabe methods cleverly. Having said that, there already exists many built in asynchronous capabilities in JS/TS language so you should consider using them in the first place. However only when some exceptional cases arise where the naked Promises are not sufficient then you may consider using AQ. The point being, all Promise methods are supplied with asynchronous tasks synchronously, while AQ can always be `enqueued` with asynchronous tasks asynchronously whenever you have something to `enqueue`.
 
+Let us start with the case where you provide your asynchronous tasks synchronously.
 
+1. **Sync Input - Async Output  Task Queue**
 
-1. **Simple Task Queue**
-
-    This is the basic operation. You may promisify your async tasks like
-
-        urls.forEach(url => aq.enqueue(fetch(url)));
-
-    and just `enqueue` them to AQ to be consumed in the order they are `enqueue`d. Or perhaps with a CPU rendering job and defined a worker session like
+    This is the basic operation where we `enqueue` the async tasks synchronously. In this case the main differences compared to Promise methods are;
     
-        var p = new Worker("./permutations");
+    - The whole system won't collapse all at once when a Promise fails.
+    - You have full control on aborting at a certain `timeout` value.
+    - You have full control on taking an action such as retrying by using the `"error"` event.
+    
+    In other words you simply `enqueue` the Promises sequentially and then;
+    
+    - Some of them may timeout and you may not care.
+    - You may register an `"error"` eventListener to take the necessary action such as retrying in case a Promise in AQ fails.
+    - You may register a `"next"` event listener to take necessary action once a specific Promise resolves. Perhaps you may like to do a `aq.clear("hard")` in the eventlisterner function and abort the remaining promises.
+    
+    Assuming that we already have an array of multiple `urls` to fetch from, a simple `retry` for 5 times errorhandler may look like;
+    ```javascript
+    let aq     = new AQ({timeout: 200}),
+        panels = urls.map(url => {
+                            let panel = aq.enqueue(fetch(url)));
+                            panel.retryCount = 5;
+                            return panel;
+                          }),
+        retry  = e => {
+                   let ix = panels.findIndex(p => p.id === e.pid);
+                   ix >= 0 && panels[ix].retryCount && ( aq.enqueue(fetch(urls[ix]))
+                                                       , panels[ix].retryCount--
+                                                       );
+                 };
+    aq.on("error").do(retry); // Literature BITCH..!
+    ```
+    Keep in mind that not all JS/TS asynchronous functionalities come with Promises. One example could be the **Workers API**. You may easily promisify your worker tasks like 
+    ```javascript
+    var wp = new Promise((v,x) => ( firstWorker.onmessage(v)
+                                  , firstWorker.onmessageerror(x)
+                                  ));
+    ```
+2. **Async Input - Async Output Task Queue**
+
+   Say you want to make Short Polling requests to an API once in every 500ms and you would like to use the first resolving response. Think like, the request that you made @0ms happens to resolve @1000ms and for some reason the one that you make @500ms resolves @900ms. You are interested in the second one since it gives you the most fresh state from the API and get rid of the first one. Then just add to your `options` object `{raceMode: true}` and keep `enqueue`ing your requests (polling) indefinitely at every 500ms. You will get the most fresh resolutions continusously and the *previously `enqueue`d slower ones* will be wiped out. Awesome..!
+
+**Contribution**
+
+I hope to have PRs inline with the fancy wide indenting of this code or i will have to rephrase them and it will make me a dull boy. Also, if you may, please pay attention to the followings,
+
+-  We are not using any `if` clasuses unless it is essential like in the case of `throw`ing an error. Please use [ternary with proper indenting](https://stackoverflow.com/a/67536242/4543207) instead.
+- For conditionals always use shortcircuits whenever it is possible.
+- For the tasks following the conditionals, use the comma operator to group multiple instructions.
+- Please don't use `const` needlessly whenever you need to declare a variable.
+- Use arrow functions whenever possible.
+- Any bleeding edge JS/TS functionalities may be added if need be. AQ is not thought to be backward compatible.
 
 **License**
 
