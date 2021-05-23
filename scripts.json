@@ -12,6 +12,10 @@
     "race": {
       "cmd": "deno run ./test/test-AQ-race.js",
       "desc": "run the race test"
+    },
+    "retry": {
+      "cmd": "deno run --allow-net ./test/test-AQ-retry.js",
+      "desc": "run the retry test"
     }
   }
 }
