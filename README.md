@@ -122,8 +122,7 @@ Let us start with the case where you provide your asynchronous tasks synchronous
                       });
     ```
     In the above `retry` attempt we are utilizing the AQ functionalities at hand such as the `"error"` eventlistener and the `panel` object however in future releases AQ may employ a built in retry functionality. This is also a good place to point out  some important `fetch()` API rejection cases. Keep in mind that the `fetch()` API rejections are only limited with network errors and all server side errors resolve within the response object. You should check the `ok` property of the received `response` object in the consuming `for await` loop, in a similar manner to the following;
-
-    ```Javascript
+    ```javascript
     async function getAsyncValues(aq){
       for await (const res of aq){
          res.ok ? res.json()
@@ -133,7 +132,6 @@ Let us start with the case where you provide your asynchronous tasks synchronous
       console.log("The stream is finalized");
     }
     ```
-    
     Also not all JS/TS asynchronous functionalities serve you with Promises. One example could be the **Workers API**. You may easily promisify your worker tasks like 
     ```javascript
     var wp = new Promise((v,x) => ( firstWorker.onmessage(v)
