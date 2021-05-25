@@ -50,7 +50,7 @@ As of v0.3 the following methods are available
 - **`.enqueue(item)`:** Inserts an item to the end of the queue and increments the `size` of the queue. The return value is a `panel` object. The `panel` object has three properties and a method as follows
     - **`item`:** A reference to the enqueued item itself.
     - **`state`:** Shows the current state of the item in the queue such as `"pending"`, `"resolved"`, `"rejected"` or `"aborted"`. 
-    - **`pid`:**  An ID to the item which can be checked against the `pid` property of the `Error` object caught at the `"error"` eventlistener function. This can be useful to retry a particular async call or whatnot.
+    - **`id`:**  An ID to the item which can be checked against the `pid` property of the `Error` object caught at the `"error"` eventlistener function. This can be useful to retry a particular async call or whatnot.
     - **`.abort()`:** Method is used to manually abort a pending item prematurely whenever needed. An aborted item will not be dequeued.
 - **`.clear("hard" | "soft" | "upto", [targetId])`:** Depending on the provided argument clears the queue accordingly;
     - **`"hard"`**: Clears the queue completelly.
