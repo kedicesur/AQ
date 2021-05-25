@@ -9,7 +9,7 @@ As of in it's current state (v0.3) AQ is still under development phase with tons
 **Functionality**
 
 - AQ is a *"kind of relaxed"* FIFO queue structure which can take both asynchronous and synchronous items at the same time. Sync or async, all `enqueue`d items are wrapped by a promise (outer promise). A resolution of the inner promise (`enqueue`d item) triggers the *previous* outer promise in the queue to be resolved. Since the previous inner promise is doing the same thing, this interlaced async chaining mechanism forms the basis of an uninterrupted continuum. Such as when the queue becomes empty (when all inner promises are depleted) there is still one outer promise yielded at the tip of the queue, awaiting for a resolution or rejection. AQ will remain there, keeping the queue alive up until you `.kill()` AQ abrubtly. At the meantime you may safely `enqueue` new items asynchronously regardless the queue had become empty or not.
-- The item at the head of the queue gets automatically dequeued once it resolves or instantly if it's already in the resolved state. Under normal operation all other items in the queue must wait until they become the head of their state (pending or resolved). So there is no  `dequeue` method in AQ at all.
+- The item at the head of the queue gets automatically dequeued once it resolves or instantly if it's already in the resolved state. Under normal operation all other items in the queue must wait until they become the head to be dequeued. So there is no  `dequeue` method in AQ at all.
 - AQ can also be used as a race machine. In `raceMode = true` case all pending items up to the the first resolving promise get wiped out to allow the winner item to dequeue. However unlike `Promise.race()` the items `enqueue`d after the winner will remain in the queue. This is particularly so since the ones coming after the winner might have been asynchronously enqueued at a later time. The late ones should be granted with their chances.
 - In the basic operation rejections are handled inside the queue silently. This also means while consuming from AQ instances you don't need to deploy a `try` & `catch` functionality. However in order to capture the rejections you can watch them by registering an errorlistener function to the `"error"` event to see why and which promise was rejected.
 - There are three events those can be listened by eventlistener functions such as `"next"`, `"error"` and `"empty"`. The eventlistener functions can be added / removed freely at any time. Every event can hold multiple eventlistener functions. The eventlistener functions can also be anonymous and they can still be removed because all eventlistener functions are assigned with a unique id.
@@ -83,6 +83,8 @@ As of v0.3, AQ instances have only one read only property which is `.size` that 
 
 AQ is a very lightweight tool but at the same time like a Swiss Army Knife, it will allow you to perform many interesting tasks easily. It doesn't offer a big API just because I want to keep it as simple as possible while being functional. This means, you may easily extend AQ's functionalities by using it's availabe methods cleverly. Having said that, there already exists many built in asynchronous capabilities in JS/TS language so you should consider using them in the first place. However only when some exceptional cases arise where the naked Promises are not sufficient then you may consider using AQ. The point being, all Promise methods are supplied with asynchronous tasks synchronously, while AQ can always be `enqueued` with asynchronous tasks asynchronously whenever you have something to `enqueue`.
 
+**Important:** Make sure that your consumtion stage (the `for await` loop) is up and running before you `enqueue` any items. Otherwise an `error: Uncaught (in promise) #<Object>` error will be thrown.
+
 Let us start with the case where you provide your asynchronous tasks synchronously.
 
 1. **Sync Input - Async Output  Task Queue**
@@ -103,18 +105,18 @@ Let us start with the case where you provide your asynchronous tasks synchronous
     ```javascript
     var aq     = new AQ({timeout: 80}),
         tryCnt = 5,
-        panels,
+        panels = [],
         retry  = e => {
                    const ix = panels.findIndex(p => p.id === e.pid),
                          tc = panels[ix].tryCnt;
                    ix >= 0 && tc && ( panels[ix] = aq.enqueue(fetch(urls[ix]))
                                     , panels[ix].tryCnt = tc - 1
-                                    , console.log(`Retry #${(tryCnt-panels[ix].tryCnt).toString().padStart(2," ")} for "${url+(ix+1)}"`)
+                                    , console.log(`Retry #${(tryCnt-panels[ix].tryCnt).toString().padStart(2," ")} for "${urls[ix]}"`)
                                     );
                  };
 
-    aq.on("error").do(retry); // Literature BITCH..!
     getAsyncValues(aq);
+    aq.on("error").do(retry); // Literature BITCH..!
     panels = urls.map(url => {
                         const panel = aq.enqueue(fetch(url));
                         panel.tryCnt = tryCnt;
@@ -146,12 +148,11 @@ Let us start with the case where you provide your asynchronous tasks synchronous
 
 I hope to have PRs inline with the fancy wide indenting of this code or i will have to rephrase them and it will make me a dull boy. Also, if you may, please pay attention to the followings,
 
--  We are not using any `if` clauses unless it is essential like in the case of `throw`ing an error. Please use [ternary with proper indenting](https://stackoverflow.com/a/67536242/4543207) instead.
-- For conditionals always use shortcircuits whenever it is possible.
+-  We are not using any `if` clauses unless it is essential like in the case of `throw`ing errors. Please try to use [ternary with proper indenting](https://stackoverflow.com/a/67536242/4543207) instead.
+- For single choice conditionals please try to use shortcircuits.
 - For the tasks following the conditionals, use the comma operator to group multiple instructions.
-- Please don't use `const` needlessly whenever you need to declare a variable.
 - Use arrow functions whenever possible.
-- Any bleeding edge JS/TS functionalities may be added if need be. AQ is not thought to be backward compatible.
+- Any bleeding edge JS/TS functionalities are welcome if need be. AQ is not thought to be backward compatible.
 
 **License**
 

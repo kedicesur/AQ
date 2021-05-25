@@ -15,19 +15,19 @@ var url    = "https://reqres.in/api/products/",
     urlCnt = 12,
     tryCnt = 5,
     urls   = Array.from({length: urlCnt}, (_,i) => url+(i+1)),
-    aq     = new AQ({timeout: 80}),
-    panels,
+    aq     = new AQ({timeout: 180}),
+    panels = [],
     retry  = e => {
                const ix = panels.findIndex(p => p.id === e.pid),
                      tc = panels[ix].tryCnt;
                ix >= 0 && tc && ( panels[ix] = aq.enqueue(fetch(urls[ix]))
                                 , panels[ix].tryCnt = tc - 1
-                                , console.log(`Retry #${(tryCnt-panels[ix].tryCnt).toString().padStart(2," ")} for "${url+(ix+1)}"`)
+                                , console.log(`Retry #${(tryCnt-panels[ix].tryCnt).toString().padStart(2," ")} for "${urls[ix]}"`)
                                 );
              };
 
+//getAsyncValues(aq);
 aq.on("error").do(retry); // Literature BITCH..!
-getAsyncValues(aq);
 panels = urls.map(url => {
                     const panel = aq.enqueue(fetch(url));
                     panel.tryCnt = tryCnt;
