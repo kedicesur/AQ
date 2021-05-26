@@ -4,7 +4,7 @@
 
 AQ is a lightweight asynchronous queue implementation with no dependencies. You may `enqueue` synchronous or asynchronous items either synchronously or asynchronously.
 
-As of in it's current state (v0.3) AQ is still under development phase with tons of `console.log()`s littering and such. Besides, at this phase of development it's not guaranteed that a new version to be backward compatible. So it *may* not be safe to use AQ in production code unless you wish to delete all `console.log()` statements yourself and stick with a certain version. Also please keep in mind that AQ is based upon modern ES2019 (ES10) features like [Private Class Fields](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/Private_class_fields) and Async Iterators, make sure that you have the right environment. AQ is tested with Deno 1.92+ and should also be fine with Node v12+, Chrome 74+, Edge 79+.
+As of in it's current state (v0.4) AQ is still under development phase with tons of `console.log()`s littering and such. Besides, at this phase of development it's not guaranteed that a new version to be backward compatible. So it *may* not be safe to use AQ in production code unless you wish to delete all `console.log()` statements yourself and stick with a certain version. Also please keep in mind that AQ is based upon modern ES2019 (ES10) features like [Private Class Fields](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/Private_class_fields) and Async Iterators, make sure that you have the right environment. AQ is tested with Deno 1.92+ and should also be fine with Node v12+, Chrome 74+, Edge 79+.
 
 **Functionality**
 
@@ -38,14 +38,14 @@ var opts = { timeout  : 200
            };
 ```
 - **`timeout`:** Since AQ instances get `dequeue`d automatically one thing that we shall avoid is to have an indefinitelly pending promise in the queue. The `timeout` property is of `Number` type and defines a duration in ms. `timeout` should always be provided unless you are sure that all `enqueue`d items are either synchronous or promises those will certainly resolve or reject within a reasonable time.
-- **`clearMode`:** AQ instances have a `.clear(clearMode)` method used to clear the queue at any time. `clearMode` can take only two values. `<"hard"` | `"soft">`.
+- **`clearMode`:** AQ instances have a `.clear(clearMode)` method used to clear the queue at any time. `clearMode` can take only two values. `<"hard" | "soft">`.
     - `"hard"` clears all the items in the queue regardless their state.
     - `"soft"` clears all the items in the queue except for the ones in resolved state.
 - **`raceMode`:** Boolean `<true | false>` option is used to switch the queue into the race mode. In race mode the queue is cleared only upto the first resolving item in the queue. Once the first resolving item is dequeued the queue now contains only the recent items those `enqueue`d after the resolving item and remains available for further `enqueue`ing operations.
 
 **Methods**
 
-As of v0.3 the following methods are available
+As of v0.4 the following methods are available
 
 - **`.enqueue(item)`:** Inserts an item to the end of the queue and increments the `size` of the queue. The return value is a `panel` object. The `panel` object has three properties and a method as follows
     - **`item`:** A reference to the enqueued item itself.
@@ -59,16 +59,17 @@ As of v0.3 the following methods are available
 
     The return value is the current AQ instance.
 - **`.flush()`:** Similar to `.clear("hard")` but returns an array of items those are in resolved or pending states. This can be used to prematurely clear the queue and apply the remaining resolved or pending items to standard `Promise` methods like `.all()`, `.race()`or `.any()` etc.
-- **`.on("event")`:** Adds or removes eventlisteners. You can add multiple eventlisteners per event. AQ instances can take three event types
-    - `"next"` event is fired per successfull yielding of a pending or an already resolved item at the head of the queue. Some pending items at the head might of course get rejected and the `"next"` event won't fire for rejections.
-    - `"error"` event is fired once an item in the queue gets rejected. An error object is passed to the event handler. The `error` object can take the shape as follows;
+- **`.on("event")`:** Adds or removes eventlisteners. You can add multiple eventlisteners per event. AQ instances can take four event types
+    - `"next"` event is fired per successfull yielding of a pending or an already resolved item at the head of the queue. Some pending items at the head might of course get rejected and the `"next"` event won't fire for rejections. The unique `id` of the resolving promise is passed to the eventhandler.
+    - `"error"` event is fired once an item in the queue gets rejected. An `error` object is passed to the event handler. The `error` object can take the shape as follows;
     ```javascript
-            { name   : "Timeout"                                // name of the error
-            , message: "Promise timed out before fullfillment"  // descrtiption
-            , pid    : "D8VJQ7ZMIDA"                            // the ID of the rejected or aborted promise
-            }
+    { name   : "Timeout"                                // name of the error
+    , message: "Promise timed out before fullfillment"  // descrtiption
+    , pid    : "D8VJQ7ZMIDA"                            // the ID of the rejected or aborted promise
+    }
     ```
     - `"empty"` event is fired whenever the queue becomes empty.
+    - `"reply"` event is fired whenever a promise in the queue gets resolved and a `reply` object is passed to the eventhandler. The `reply` object has two properties. `"value"` which holds the resolved value and `"pid"` which holds the unique `id` of the resolving promise.
 
     When invoked, the `.on("event")` returns an object with two methods. `.do(f)` and `.forget(id)` whereas `f` is a function and `id` is a unique id string.
 
@@ -77,7 +78,7 @@ As of v0.3 the following methods are available
 
 **Properties**
 
-As of v0.3, AQ instances have only one read only property which is `.size` that gives you the number of items in the queue.
+As of v0.4, AQ instances have only one read only property which is `.size` that gives you the number of items in the queue.
 
 **Use Cases**
 

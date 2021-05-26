@@ -2,10 +2,11 @@ import {AQ} from "../mod.ts";
 
 async function getAsyncValues(aq){
   for await (const res of aq){
-    res.ok && res.json()
-                 .then(json => console.log( `%cReceived color name "${json.data.name}" with value ${json.data.color} at the endpoint`
-                                          , `color: ${json.data.color}`
-                                          ));
+    res.ok ? res.json()
+                .then(json => console.log( `%cReceived color name "${json.data.name}" with value ${json.data.color} at the endpoint`
+                                         , `color: ${json.data.color}`
+                                         ))
+           : res.then(_ => console.log("Network Error"));
   }
     console.log("The stream is finalized");
 }
@@ -15,7 +16,7 @@ var url    = "https://reqres.in/api/products/",
     urlCnt = 12,
     tryCnt = 5,
     urls   = Array.from({length: urlCnt}, (_,i) => url+(i+1)),
-    aq     = new AQ({timeout: 180}),
+    aq     = new AQ({timeout: 110}),
     panels = [],
     retry  = e => {
                const ix = panels.findIndex(p => p.id === e.pid),
@@ -26,7 +27,7 @@ var url    = "https://reqres.in/api/products/",
                                 );
              };
 
-//getAsyncValues(aq);
+getAsyncValues(aq);
 aq.on("error").do(retry); // Literature BITCH..!
 panels = urls.map(url => {
                     const panel = aq.enqueue(fetch(url));
