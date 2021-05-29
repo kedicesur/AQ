@@ -1,4 +1,4 @@
-import {AQ} from "../mod.ts";
+import {AQ} from "https://gitlab.com/Redu/aq/-/raw/master/mod.ts";
 
 async function getAsyncValues(aq){
   for await (const response of aq){
