@@ -26,18 +26,18 @@ function fakeFetch(n,t,dmin,dmax,errt){
                                         ));
 }
 
-function poll(c=0){
+function poll(c=1){
   setTimeout( _ => ( aq.enqueue(fakeFetch(c,c*pper,dmin,dmax,errt))
                    , c < pcnt && poll(++c)
                    )
                    , pper);
 }
 
-var pcnt = 100,
-    pper = 250,
-    dmin = 250,
-    dmax = 5000,
-    errt = 0.01,
+var pcnt = 100,  // Promise Count
+    pper = 100,  // Promise Period
+    dmin = 250,  // Minimum Duration
+    dmax = 5000, // Maximum Duration
+    errt = 0.1,  // Error Rate
     aq   = new AQ({ clearMode: "soft"
                   , raceMode : true
                   });

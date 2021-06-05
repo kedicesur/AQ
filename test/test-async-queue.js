@@ -51,7 +51,7 @@ var opts  = { timeout  : 200
               , args: { length     : 10
                       , earliest   : 0
                       , maxDuration: 300
-                      , rejectRatio: 0.5
+                      , rejectRatio: 0.25
                       }
               , time: 0
               }

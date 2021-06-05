@@ -4,13 +4,12 @@
 
 AQ is a lightweight asynchronous queue implementation with no dependencies. You may `enqueue` synchronous or asynchronous items either synchronously or asynchronously.
 
-As of in it's current state (v0.4) AQ is still under development phase with tons of `console.log()`s littering and such. Besides, at this phase of development it's not guaranteed that a new version to be backward compatible. So it *may* not be safe to use AQ in production code unless you wish to delete all `console.log()` statements yourself and stick with a certain version. Also please keep in mind that AQ is based upon modern ES2019 (ES10) features like [Private Class Fields](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/Private_class_fields) and Async Iterators, make sure that you have the right environment. AQ is tested with Deno 1.92+ and should also be fine with Node v12+, Chrome 74+, Edge 79+.
+As of in it's current state (v0.4.1) AQ is still under development phase with a lot of `console.log()`s to display resolutions and rejections. Besides, at this phase of development it's not guaranteed that a new version to be backward compatible. So it *may* not be safe to use AQ in production code unless you wish to delete all `console.log()` statements yourself and stick with a certain version. Also please keep in mind that AQ is based upon modern ES2019 (ES10) features like [Private Class Fields](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/Private_class_fields) and Async Iterators, make sure that you have the right environment. AQ is tested with Deno 1.92+ and should also be fine with Node v12+, Chrome 74+, Edge 79+.
 
 ### **Functionality**
 
 - AQ is a *"kind of relaxed"* FIFO queue structure which can take both asynchronous and synchronous items at the same time. Sync or async, all `enqueue`d items are wrapped by a promise (outer promise). A resolution of the inner promise (`enqueue`d item) triggers the *previous* outer promise in the queue to be resolved. Since the previous inner promise is doing the same thing, this interlaced async chaining mechanism forms the basis of an uninterrupted continuum. Such as when the queue becomes empty (when all inner promises are depleted) there is still one outer promise yielded at the tip of the queue, awaiting for a resolution or rejection. AQ will remain there, keeping the queue alive up until you `.kill()` AQ abrubtly. At the meantime you may safely `enqueue` new items asynchronously regardless the queue had become empty or not.
 - The item at the head of the queue gets automatically dequeued once it resolves or instantly if it's already in the resolved state. Under normal operation all other items in the queue must wait until they become the head to be dequeued. So there is no  `dequeue` method in AQ at all.
-- **Important:** Since AQ dequeues automatically according to the conditions mentioned above, you have to make sure that your consumption stage (the `for await` loop) is up and running before you start `enqueue`ing items. Otherwise an `"error: Uncaught (in promise) #<Object>"` error will be thrown.
 - AQ can also be used as a race machine. In `raceMode = true` case all pending items up to the the first resolving promise get wiped out to allow the winner item to dequeue. However unlike `Promise.race()` the items `enqueue`d after the winner will remain in the queue. This is particularly so since the ones coming after the winner might have been asynchronously enqueued at a later time. The late ones should be granted with their chances.
 - In the basic operation rejections are handled inside the queue silently. This also means while consuming from AQ instances you don't need to deploy a `try` & `catch` functionality. However in order to capture the rejections you can watch them by registering an eventlistener function to the `"error"` event to see why and which promise was rejected.
 - There are four events those can be listened by eventlistener functions such as `"next"`, `"error"`, `"reply"` and `"empty"`. The eventlistener functions can be added / removed freely at any time. Every event can hold multiple eventlistener functions. The eventlistener functions can also be anonymous and they can still be removed because all eventlistener functions are assigned with a unique id.
@@ -55,7 +54,7 @@ var opts = { timeout  : 200
 
 ### **Methods**
 
-As of v0.4 the following methods are available
+As of v0.4.1 the following methods are available
 
 - **`.enqueue(item)`:** Inserts an item to the end of the queue and increments the `size` of the queue. The return value is a `panel` object. The `panel` object has three properties and a method as follows
     - **`item`:** A reference to the enqueued item itself.
@@ -88,7 +87,7 @@ As of v0.4 the following methods are available
 
 ### **Properties**
 
-As of v0.4, AQ instances have only one read only property which is `.size` that gives you the number of items in the queue.
+As of v0.4.1, AQ instances have only one read only property which is `.size` that gives you the number of items in the queue.
 
 ### **Use Cases**
 
@@ -189,6 +188,12 @@ $ denon race
 $ denon retry
 ```
 and play with their source code as you like.
+
+### **TODO**
+
+- Implementing an AQ native interface for [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) to include auto retry functionality etc.
+- Implementing an AQ native  interface for [Web Workers API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API).
+- Implementing an AQ native interface for [Broadcast Channel API](https://developer.mozilla.org/en-US/docs/Web/API/Broadcast_Channel_API).
 
 ### **Contribution**
 
