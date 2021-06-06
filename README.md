@@ -20,7 +20,7 @@ As of in it's current state (v0.4.1) AQ is still under development phase with a 
 
 Just add
 ```javascript
-import {AQ} from "https://gitlab.com/Redu/aq/-/raw/master/mod.ts";
+import {AQ} from "https://gitlab.com/Redu/aq/-/raw/v0.4.1/mod.ts";
 ```
 to your script. To test AQ in your projects please follow the instructions [down here](#testing).
 

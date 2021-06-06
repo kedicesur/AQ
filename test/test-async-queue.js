@@ -1,4 +1,5 @@
-import AsyncQueue from "../lib/async-queue.js";
+//import AQ from "../lib/async-queue.js";
+import {AQ} from "https://gitlab.com/Redu/aq/-/raw/v0.4.1/mod.ts";
 
 async function getAsyncValues(aq){
   for await (const item of aq){
@@ -44,7 +45,7 @@ var opts  = { timeout  : 200
     tmp  = void 0,
     es   = 0,
     ns   = 0,
-    aq    = new AsyncQueue(opts),
+    aq    = new AQ(opts),
     tests = [ { name: "Promises"
               , desc: `Enqueueing 10 promises to the queue`
               , func: ({length,earliest,maxDuration,rejectRatio}) => makePromiseArray({length,earliest,maxDuration,rejectRatio}).forEach(e => aq.enqueue(e))
@@ -198,4 +199,4 @@ var id2 = aq.on("empty").do(_ => !aq.size && console.log(`%cEmpty queue fired`, 
 console.log(id0,id1,id2);
 
 getAsyncValues(aq);
-run(tests.slice(0,7));
+run(tests.slice(0));
