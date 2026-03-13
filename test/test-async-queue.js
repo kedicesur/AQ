@@ -1,5 +1,4 @@
-//import AQ from "../lib/async-queue.js";
-import {AQ} from "https://gitlab.com/Redu/aq/-/raw/v0.4.1/mod.ts";
+import {AQ} from "https://deno.land/x/async_queue@v0.4.1/mod.ts";
 
 async function getAsyncValues(aq){
   for await (const item of aq){

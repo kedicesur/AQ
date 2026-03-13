@@ -20,9 +20,9 @@ As of in it's current state (v0.4.1) AQ is still under development phase with a 
 
 Just add
 ```javascript
-import {AQ} from "https://gitlab.com/Redu/aq/-/raw/v0.4.1/mod.ts";
+import {AQ} from "https://deno.land/x/async_queue@v0.4.1/mod.ts";
 ```
-to your script. To test AQ in your projects please follow the instructions [down here](#testing).
+to your script. To test AQ in your projects please follow the instructions [down here](#strongtestingstrong #testing).
 
 ### **Instances**
 
