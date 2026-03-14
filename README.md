@@ -189,39 +189,14 @@ Let us start with the case where you provide your asynchronous tasks synchronous
 
 ### **Testing**
 
-AQ is being developed on [Deno](https://deno.land/). So I would advise you to install and use Deno, at least for your experiments. Working on Deno projects, [Denon](https://deno.land/x/denon@2.4.7) is the tool which does the job what [Nodemon](https://www.npmjs.com/package/nodemon) does in Node. So go ahead and simply install Denon too as shown in it's page. The following is the `scripts.json` file used by Denon in this project.
 AQ is being developed on [Deno](https://deno.land/). To run the tests, use the following commands:
-```javascript
-{
-  "$schema": "https://deno.land/x/denon@2.4.7/schema.json",
-  "scripts": {
-    "start": {
-      "cmd": "deno run app.js",
-      "desc": "run my app.js file"
-    },
-    "test": {
-      "cmd": "deno run --inspect ./test/test-async-queue.js",
-      "desc": "run the test file"
-    },
-    "race": {
-      "cmd": "deno run ./test/test-AQ-race.js",
-      "desc": "run the race test"
-    },
-    "retry": {
-      "cmd": "deno run --allow-net ./test/test-AQ-retry.js",
-      "desc": "run the retry test"
-    }
-  }
-}
-```
-Now in the project folder run the tests like
 ```bash
 # to run test-async-queue.js
-$ denon test
+# deno task test
 # to run test-Aq-race.js
-$ denon race
+# deno task race
 # to run test-AQ-retry.js
-$ denon retry
+# deno task retry
 ```
 and play with their source code as you like.
 
