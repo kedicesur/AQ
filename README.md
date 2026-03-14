@@ -5,6 +5,11 @@
 AQ is a lightweight asynchronous queue implementation with no dependencies. You may `enqueue` synchronous or asynchronous items either synchronously or asynchronously.
 
 As of v0.5.0, AQ utilizes modern ES2024 features such as `Promise.withResolvers` and Explicit Resource Management (`Symbol.asyncDispose`). Ensure your environment supports these features (Deno 1.42+, Node.js 22+, Chrome 119+, Edge 119+). This version brings improved stability and memory management. While the library retains some `console.log` statements for execution visibility, it is structurally robust and memory-safe.
+ 
+### **TLDR: Why Use AQ?**
+
+AQ simplifies asynchronous task management by providing a queue that handles both synchronous and asynchronous items. Unlike standard JavaScript Promises, AQ offers built-in features like timeouts, error handling, the ability to clear or abort pending tasks, providing more control and robustness for complex asynchronous workflows like racing asynchronously queued promises etc. Plus, it supports explicit resource management via `Symbol.asyncDispose`.
+
 
 ### **Recent Updates & Fixes**
 
@@ -185,6 +190,7 @@ Let us start with the case where you provide your asynchronous tasks synchronous
 ### **Testing**
 
 AQ is being developed on [Deno](https://deno.land/). So I would advise you to install and use Deno, at least for your experiments. Working on Deno projects, [Denon](https://deno.land/x/denon@2.4.7) is the tool which does the job what [Nodemon](https://www.npmjs.com/package/nodemon) does in Node. So go ahead and simply install Denon too as shown in it's page. The following is the `scripts.json` file used by Denon in this project.
+AQ is being developed on [Deno](https://deno.land/). To run the tests, use the following commands:
 ```javascript
 {
   "$schema": "https://deno.land/x/denon@2.4.7/schema.json",
