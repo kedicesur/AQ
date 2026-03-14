@@ -10,6 +10,8 @@ As of v0.5.0, AQ utilizes modern ES2024 features such as `Promise.withResolvers`
 
 AQ simplifies asynchronous task management by providing a queue that handles both synchronous and asynchronous items. Unlike standard JavaScript Promises, AQ offers built-in features like timeouts, error handling, the ability to clear or abort pending tasks, providing more control and robustness for complex asynchronous workflows like racing asynchronously queued promises etc. Plus, it supports explicit resource management via `Symbol.asyncDispose`.
 
+AsyncQueue is a blazing-fast, self-healing promise stream that turns chaotic API requests into a perfectly ordered flow of fresh data. Stagger requests across multiple services every 100ms, and it automatically surfaces the fastest response while aborting stale ones—guaranteeing every yielded result is fresher than the last. No manual retries, no thundering herds, no stale reads: just resilient, real-time data for trading, IoT, monitoring, or any time-critical system where milliseconds matter.
+
 
 ### **Recent Updates & Fixes**
 
