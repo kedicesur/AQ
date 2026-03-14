@@ -87,8 +87,8 @@ var opts  = { timeout  : 200
             , { name: "Flush"
               , desc: "Flushing queue and testing flushed promises by Promise.all()"
               , func: _ => ( tmp = aq.flush()
-                           , console.log(`Flushed ${tmp.length} promises. The size of queue is ${aq.size}`)
-                           , Promise.all(tmp)
+                           , console.log(`Flushed ${tmp.resolved.length} resolved, ${tmp.rejected.length} rejected, ${tmp.aborted.length} aborted, ${tmp.pending.length} pending promises. The size of queue is ${aq.size}`)
+                           , Promise.all(tmp.resolved)
                                     .then(values => console.log(values))
                                     .catch(error => console.log("Promise.all() rejected with \n",error))
                           )
@@ -174,7 +174,7 @@ var opts  = { timeout  : 200
                                                                                                                                     .padStart(3," ")} is in ${p.state} state @${maxDuration}ms`))
                                                                                        , aq.enqueue("something after kill")
                                                                                        , aq.enqueue(Promise.resolve("someting async after kill"))
-                                                                                       , --tc > 0 && ( aq = new AsyncQueue(opts)
+                                                                                       , --tc > 0 && ( aq = new AQ(opts)
                                                                                                      , getAsyncValues(aq)
                                                                                                      , run(tests)
                                                                                                      )

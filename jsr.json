@@ -1,0 +1,9 @@
+{
+  "name": "@kedicesur/aq",
+  "version": "0.5.0",
+  "exports": "./mod.ts",
+  "publish": {
+    "include": ["LICENSE", "README.md", "mod.ts", "lib/**/*.js"],
+    "exclude": ["test/", "scripts.json"]
+  }
+}

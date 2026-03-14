@@ -4,23 +4,41 @@
 
 AQ is a lightweight asynchronous queue implementation with no dependencies. You may `enqueue` synchronous or asynchronous items either synchronously or asynchronously.
 
-As of in it's current state (v0.4.1) AQ is still under development phase with a lot of `console.log()`s to display resolutions and rejections. Besides, at this phase of development it's not guaranteed that a new version to be backward compatible. So it *may* not be safe to use AQ in production code unless you wish to delete all `console.log()` statements yourself and stick with a certain version. Also please keep in mind that AQ is based upon modern ES2019 (ES10) features like [Private Class Fields](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/Private_class_fields) and Async Iterators, make sure that you have the right environment. AQ is tested with Deno 1.92+ and should also be fine with Node v12+, Chrome 74+, Edge 79+.
+As of v0.5.0, AQ utilizes modern ES2024 features such as `Promise.withResolvers` and Explicit Resource Management (`Symbol.asyncDispose`). Ensure your environment supports these features (Deno 1.42+, Node.js 22+, Chrome 119+, Edge 119+). This version brings improved stability and memory management. While the library retains some `console.log` statements for execution visibility, it is structurally robust and memory-safe.
+
+### **Recent Updates & Fixes**
+
+- **Memory Leak Fixed:** A critical issue causing infinite retention of linked nodes has been resolved. Processed items are now properly garbage collected.
+- **Stability:** Fixed a guaranteed crash when the queue became empty during consumption.
+- **Timeout Logic:** Fixed timers not being cleared after promise resolution, preventing resource leaks.
+- **Performance:** Optimized class definitions and promise creation using modern patterns (`Promise.withResolvers`).
+- **Flush:** The `.flush()` method now returns a structured object `{ resolved: [], rejected: [], aborted: [], pending: [] }` instead of a flat array.
+- **Standard Compliance:** Better handling of "Thenables" and strictly compliant Promises.
 
 ### **Functionality**
 
 - AQ is a *"kind of relaxed"* FIFO queue structure which can take both asynchronous and synchronous items at the same time. Sync or async, all `enqueue`d items are wrapped by a promise (outer promise). A resolution of the inner promise (`enqueue`d item) triggers the *previous* outer promise in the queue to be resolved. Since the previous inner promise is doing the same thing, this interlaced async chaining mechanism forms the basis of an uninterrupted continuum. Such as when the queue becomes empty (when all inner promises are depleted) there is still one outer promise yielded at the tip of the queue, awaiting for a resolution or rejection. AQ will remain there, keeping the queue alive up until you `.kill()` AQ abrubtly. At the meantime you may safely `enqueue` new items asynchronously regardless the queue had become empty or not.
+- AQ is a *"kind of relaxed"* FIFO queue structure which can take both asynchronous and synchronous items at the same time. Sync or async, all `enqueue`d items are wrapped by a promise (outer promise). A resolution of the inner promise (`enqueue`d item) triggers the *previous* outer promise in the queue to be resolved. Since the previous inner promise is doing the same thing, this interlaced async chaining mechanism forms the basis of an uninterrupted continuum. Such as when the queue becomes empty (when all inner promises are depleted) there is still one outer promise yielded at the tip of the queue, awaiting for a resolution or rejection. AQ will remain there, keeping the queue alive up until you `.kill()` AQ abruptly. At the meantime you may safely `enqueue` new items asynchronously regardless the queue had become empty or not.
 - The item at the head of the queue gets automatically dequeued once it resolves or instantly if it's already in the resolved state. Under normal operation all other items in the queue must wait until they become the head to be dequeued. So there is no  `dequeue` method in AQ at all.
 - AQ can also be used as a race machine. In `raceMode = true` case all pending items up to the the first resolving promise get wiped out to allow the winner item to dequeue. However unlike `Promise.race()` the items `enqueue`d after the winner will remain in the queue. This is particularly so since the ones coming after the winner might have been asynchronously enqueued at a later time. The late ones should be granted with their chances.
 - In the basic operation rejections are handled inside the queue silently. This also means while consuming from AQ instances you don't need to deploy a `try` & `catch` functionality. However in order to capture the rejections you can watch them by registering an eventlistener function to the `"error"` event to see why and which promise was rejected.
 - There are four events those can be listened by eventlistener functions such as `"next"`, `"error"`, `"reply"` and `"empty"`. The eventlistener functions can be added / removed freely at any time. Every event can hold multiple eventlistener functions. The eventlistener functions can also be anonymous and they can still be removed because all eventlistener functions are assigned with a unique id.
-- Once an AQ instance is initiated it will remain being available for asynchronous `enqueue`ing even if in time it becomes empty. So you may keep it alive indefinitelly or just `.kill()` if it's no longer needed.
+- Once an AQ instance is initiated it will remain being available for asynchronous `enqueue`ing even if in time it becomes empty. So you may keep it alive indefinitely or just `.kill()` if it's no longer needed.
 - Being an async iterator, AQ instances are ideally consumed by a `for await of` loop.
 
 ### **Importing**
 
-Just add
+**Via JSR (Recommended)**
+```bash
+deno add @kedicesur/aq
+```
 ```javascript
-import {AQ} from "https://deno.land/x/async_queue@v0.4.1/mod.ts";
+import { AQ } from "@kedicesur/aq";
+```
+
+**Via URL**
+```javascript
+import { AQ } from "https://jsr.io/@kedicesur/aq/0.5.0/mod.ts";
 ```
 to your script. To test AQ in your projects please follow the instructions [down here](#strongtestingstrong #testing).
 
@@ -52,6 +70,18 @@ var opts = { timeout  : 200
     - `"soft"` clears all the items in the queue except for the ones in resolved state.
 - **`raceMode`:** Boolean `<true | false>` option is used to switch the queue into the race mode. In race mode the queue is cleared only upto the first resolving item in the queue. Once the first resolving item is dequeued the queue now contains only the recent items those `enqueue`d after the resolving item and remains available for further `enqueue`ing operations.
 
+### **Explicit Resource Management**
+
+AQ implements `Symbol.asyncDispose` (ES2024), enabling automatic cleanup of resources (timers, internal references) when used with the `await using` syntax.
+
+```javascript
+{
+  await using aq = new AQ({ timeout: 5000 });
+  aq.enqueue(fetch("..."));
+  // ... work with queue
+} // aq.kill() is automatically called here
+```
+
 ### **Methods**
 
 As of v0.4.1 the following methods are available
@@ -67,7 +97,7 @@ As of v0.4.1 the following methods are available
     - **`"upto"`**: Clears the queue up to the item with the `id` maching the provided optional `targetId` argument. The items coming after are kept.
 
     The return value is the current AQ instance.
-- **`.flush()`:** Similar to `.clear("hard")` but returns an array of items those are in resolved or pending states. This can be used to prematurely clear the queue and apply the remaining resolved or pending items to standard `Promise` methods like `.all()`, `.race()`or `.any()` etc.
+- **`.flush()`:** Similar to `.clear("hard")` but returns a structured object `{ resolved: [], rejected: [], aborted: [] }` containing items in their respective states. This provides better visibility than the previous flat array return.
 - **`.on("event")`:** Adds or removes eventlisteners. You can add multiple eventlisteners per event. AQ instances can take four event types
     - `"next"` event is fired per successfull yielding of a pending or an already resolved item at the head of the queue. Some pending items at the head might of course get rejected and the `"next"` event won't fire for rejections. The unique `id` of the resolving promise is passed to the eventhandler.
     - `"error"` event is fired once an item in the queue gets rejected. An `error` object is passed to the event handler. The `error` object can take the shape as follows;
