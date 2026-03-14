@@ -1,0 +1,7 @@
+{
+  "version": "5",
+  "remote": {
+    "https://deno.land/x/async_queue@v0.4.1/lib/async-queue.js": "93da06f94a74635f98045e9ed799248b4f6aadb10ef36483328fc907e7ea2b26",
+    "https://deno.land/x/async_queue@v0.4.1/mod.ts": "41adb04abb1630d4cb0652c8cba68c21689cafd6341f39639fbb1941f49368ff"
+  }
+}

@@ -1,4 +1,4 @@
-import {AQ} from "https://deno.land/x/async_queue@v0.4.1/mod.ts";
+import {AQ} from "../mod.ts";
 
 async function getAsyncValues(aq){
   for await (const response of aq){

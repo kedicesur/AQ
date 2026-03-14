@@ -1,0 +1,7 @@
+{ "tasks": { "dev": "deno run --watch --allow-net --allow-read app.js"
+           , "start": "deno run --allow-net --allow-read app.js"
+           , "test": "deno run --inspect ./test/test-async-queue.js"
+           , "race": "deno run ./test/test-AQ-race.js"
+           , "retry": "deno run --allow-net ./test/test-AQ-retry.js"
+           }
+}
